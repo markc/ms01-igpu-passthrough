@@ -1,3 +1,66 @@
+## Intel Core Graphics Passthrough ROM
+
+### Introduction
+- This ROM is an Intel 10-13 Core Graphics Passthrough PCI optionROM. It can be used with OVMF to start the virtual machine, and the display HDMI/DP output screen and HDMI/DP sound work normally.
+- This ROM is easy to use, and there is no need to modify or customize OVMF. Just use PVE!
+- The virtual machine starts without a distorted screen or a blue screen.
+
+### How to use:
+
++ This ROM needs to use two rom files:
+- Core display pass-through OptionROM: gen12_igd.rom -- basically universal for all platforms
+- GOP ROM: --- Select the corresponding rom file according to different core display platforms, see the table below:
+
+GOP ROM file name Applicable CPU platform
+gen12_gop.rom Intel 11-13th generation Core
+5105_gop.rom N5105 / N5095
+8505_gop.rom 8505
+
+Please select the corresponding GOP ROM according to the CPU of the host. Selecting the wrong GOP ROM function will result in no startup screen
+
+Copy these two rom files to /use/share/kvm/
+
+Because two rom files are used, in the conf configuration file, one rom file is added to the graphics card and the other is added to the sound card, please pay attention.
+
+hostpci0: 0000:00:02.0,legacy-igd=1,romfile=gen12_igd.rom
+hostpci1: 0000:00:1f.3,romfile=gen12_gop.rom
+
+You can refer to my 100.conf, pay attention to the following matters:
+
+The model must be i440fx, (QEMU does not support Q35 display in Legacy mode, QEMU can be customized to support Q35, which is not discussed in this article)
+BIOS must be OVMF, Intel core graphics no longer supports traditional BIOS boot
+Add legacy-igd=1 to the core graphics PCI to support display in Legacy mode
+Add args: -set device.hostpci0.addr=02.0 -set device.hostpci0.x-igd-gms=0x2 -set device.hostpci0.x-igd-opregion=on
+"-debugcon in args file:/root/d-debug.log -global isa-debugcon.iobase=0x402” is a debugging file, don’t add it if you mind
+
+The virtual machine memory is at least 4G, less than 4G may have problems
+
+It is recommended to x-igd-gms=0x2, and pay attention to the BIOS setting: DVMT pre allocated, not more than 64M
+
+Usage restrictions
+
+This ROM does not support commercial use, only for DIY enthusiasts technical research
+
+This ROM only supports Intel core graphics, not AMD
+
+Only supports UEFI, normal boot. Secure boot is not supported
+
+Only supports OVMF mode, seabios does not support
+
+The memory is at least 4G, less than 4G may have problems
+
+Note the BIOS setting: DVMT pre allocated, not more than 64M, 64M corresponds to x-igd-gms=0x2, if it exceeds 64M, x-igd-gms needs to be increased!
+
+This ROM is only tested in the following environments, and I have not tested other environments.
+
+South China Gold 760 motherboard + 13600CPU
+PVE 8.0.3
+The test results are basically perfect, with logo and startup screen, no screen distortion, and HDMI/DP sound working properly. You can also complete the entire Windows reinstallation.
+
+YouTube plays 4K video: Task Manager GPU occupancy
+
+
+
 ## Intel 核显直通 optionROM
 
 
